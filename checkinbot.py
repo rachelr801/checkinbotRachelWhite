@@ -55,11 +55,11 @@ def download_attachment(file_info):
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
         print(f"Successfully downloaded: {filename}")
-except requests.RequestException as e:
-    print(f"Failed to download attachment {filename}: {e}", file=sys.stderr)
+        except requests.RequestException as e:
+        print(f"Failed to download attachment {filename}: {e}", file=sys.stderr)
 
 #paginate through all posts and return only those created by the instructor
-def collent_instructor_posts():
+def collect_instructor_posts():
     posts_url = f"{API_BASE_URL}/api/v1/posts"
     instructor_posts = []
     page = 1
@@ -87,6 +87,87 @@ def collent_instructor_posts():
                         download_attachment(attachment)
 
             #check pagination metadata to see if another page exists
-            meta = dat
+            meta = data.get("meta", {})
+            if page >= meta.get("total_pages", page):
+                break
+            page += 1
+
+        except requests.RequestException as e:
+            print(f"Error retrieving posts page {page}: {e}", file=sys.strderr)
+            break
+
+    return instructor_posts
+
+#identify checin-in posts, check for replies, handle responses
+def process_check_ins(posts, bot_user_id):
+    bot_user_id_str = str(bot_user_id)
+
+    for post in posts:
+        title = post.get("title", "")
+        post_id = post.get("id")
+
+        #identify checin in posts
+        if "check-in" in title.lower():
+            print(f"Processing check-in post [{post_id}]: '{title}'")
+
+            #get comments to avoid duplicte responses
+            comments_url = f"{API_BASE_URL}/api/v1/posts/{post_id}/comments"
+            try:
+                comments_resp = session.get(comments_url)
+                comments_resp.raise_for_status()
+                comments = comments_resp.json().get("comments", [])
+            except requests.RequestException as e:
+                print(f"Could not retrieve comments for post{post_id}: {e}", file=sys.stderr)
+                continue
+
+            #deterime in bot has already replied
+            already_replied = any(str(c.get("author_id")) == bot_user_id_str for c in comments)
+  
+            if already_replied:
+                print(f"Skipping post {post_id}: Already replied.")
+                continue
+
+            #attempt to submit a new reply
+            print(f"Submitting reply to post {post_id}...")
+            reply_payload = {"body": "Present and accounted for. Task completed automatically via GitHub Actions."}
+           
+            try:
+                reply_resp = session.post(comments_url, json=reply_payload)
+                reply_resp.raise_for_status()
+                print(f"Successfully replied to post {post_id}.")
+            except requests.exceptions.HTTPError as e:
+                #handle server window enforcements gracefully
+                if e.response is not None and e.response.status_code == 423:
+                    print(f"Notice: Check-in window is locked (423) for post {post_id}.")
+                else:
+                    print(f"HTTP error replying to post {post_id}: {e}", file=sys.stderr)
+            except requests.RequestException as e:
+                print(f"Network error replying to post {post_id}: {e}", file=sys.stderr)
+
+def main():
+    #identity verification
+    bot_profile = get_my_profile()
+    bot_user_id = bot_profile.get("id")
+    print(f"Bot authenticated successfully. User ID: {bot_user_id}")
+
+    #collenct instructor posts
+    instructor_posts = collect_instructor_posts()
+
+    #save the metadata file
+    output_json_path = os.path.join(ARTIFACT_DIR, "collected.json")
+    with open(outut_json_path, 'w', encoding='utf-8') as f:
+        json.dump(instructor_posts, f, indent=2, ensure_ascii=False)
+    print(f"Saved {len(instructor_posts)} instructor posts to {output_json_path}")
+
+    #handle open check-in actions
+    process_check_ins(instructor_posts, bot_user_id)
+
+if__name__ =="__main__":
+    main()
+
+                  
+          
+              
+              
 
   
