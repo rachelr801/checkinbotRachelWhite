@@ -11,7 +11,7 @@ import requests
 #load environment variables
 API_BASE_URL = os.getenv("PRACTICE_HUB_URL", "").rstrip("/")
 API_TOKEN = os.getenv("PRACTICE_API_TOKEN")
-INTRUCTOR_ID = os.getenv("INSTRUCTOR_ID")
+INSTRUCTOR_ID = os.getenv("INSTRUCTOR_ID")
 
 #ensure required configuration
 if not API_BASE_URL or not API_TOKEN or not INSTRUCTOR_ID:
