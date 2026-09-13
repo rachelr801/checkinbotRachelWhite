@@ -1,0 +1,52 @@
+name: Daily Practice Hub Automation
+
+on:
+  schedule:
+    # runs at 08:00 and 18:00 daily
+    - cron: '0 8,18 * * *'
+  workflow_dispatch: # allows manual trigger within GitHub
+
+permissions:
+  contents: write # allows bot to push artifacts to repository
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Execute Automation Script
+        env:
+          PRACTICE_HUB_URL: ${{ secrets.PRACTICE_API_URL }}
+          PRACTICE_API_TOKEN: ${{ secrets.PRACTICE_API_TOKEN }}
+          INSTRUCTOR_ID: ${{ vars.INSTRUCTOR_ID }}
+        run: python app/checkinbot.py
+
+      - name: Commit and Push Updated Artifacts
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # stage only changes inside the target artifact directory
+          git add artifact/
+
+          # commit and push changes if updates are present
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Automated Sync: Updated instructor posts and check-ins [skip ci]"
+            git push
+          else
+            echo "No new updates or content collected during this run."
+          fi

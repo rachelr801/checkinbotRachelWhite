@@ -45,17 +45,19 @@ def get_my_profile():
 def download_attachment(file_info):
     file_id = file_info.get("id")
     filename = file_info.get("filename", f"file_{file_id}")
-    download_url = f"{API_BASE_URL}/api/v1/attachments/{file_id}/download"
+    download_url =f"{API_BASE_URL}/api/v1/attachments/{file_id}/download"
 
     local_path = os.path.join(FILES_DIR, filename)
-    print(f"Downloading attachment" {filename} ...")
+    print(f"Downloading attachment: {filename} ...")
 
-    try: 
+    try:
         with session.get(download_url, stream=True) as r:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+            r.raise_for_status()
+            with open(local_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
         print(f"Successfully downloaded: {filename}")
-        except requests.RequestException as e:
+    except requests.RequestException as e:
         print(f"Failed to download attachment {filename}: {e}", file=sys.stderr)
 
 #paginate through all posts and return only those created by the instructor
@@ -93,7 +95,7 @@ def collect_instructor_posts():
             page += 1
 
         except requests.RequestException as e:
-            print(f"Error retrieving posts page {page}: {e}", file=sys.strderr)
+            print(f"Error retrieving posts page {page}: {e}", file=sys.stderr)
             break
 
     return instructor_posts
@@ -155,19 +157,12 @@ def main():
 
     #save the metadata file
     output_json_path = os.path.join(ARTIFACT_DIR, "collected.json")
-    with open(outut_json_path, 'w', encoding='utf-8') as f:
+    with open(output_json_path, 'w', encoding='utf-8') as f:
         json.dump(instructor_posts, f, indent=2, ensure_ascii=False)
     print(f"Saved {len(instructor_posts)} instructor posts to {output_json_path}")
 
     #handle open check-in actions
     process_check_ins(instructor_posts, bot_user_id)
 
-if__name__ =="__main__":
+if __name__ == "__main__":
     main()
-
-                  
-          
-              
-              
-
-  
