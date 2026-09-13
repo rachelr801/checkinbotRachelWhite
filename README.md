@@ -15,14 +15,16 @@ An in-depth paragraph about your project and overview of use.
  
 ### Dependencies
  
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-* List pip install instructions.
+* Python 3.11+
+* Packages listed in [requirements.txt](requirements.txt) (currently `requests>=2.31.0`)
  
 ### Installing
  
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Clone or download this repository
+* Install the required packages:
+```
+pip install -r requirements.txt
+```
  
 ### Executing program
  
