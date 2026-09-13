@@ -5,12 +5,16 @@
  
 # Project Title
  
-Simple overview of use/purpose.
+Practice Hub Check-in Bot
  
 ## Description
- 
-An in-depth paragraph about your project and overview of use.
- 
+ Automated bot designed to interface with the class Practice Hub REST API. The bot will track instructor posts and submits replies on a structured timeframe.
+
+## AI Usage
+Hand-written components: project setup, core program structure, API configuration, environment variable usage, post filtering logic, check-in identification, and GitHub Actions workflow configuration.
+
+AI-assisted components: exception handling for HTTP 423 responses, testing ideas, syntax checking, debugging, and reviewing code for spacing or formatting errors.
+
 ## Getting Started
  
 ### Dependencies
@@ -28,20 +32,20 @@ pip install -r requirements.txt
  
 ### Executing program
  
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
+The program can be run manually from a terminal after the required environment variables have been configured.
+
+python checkinbot.py
  
 ## Help
  
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+If the program cannot connect to the Practice Hub, verify that the API URL and API token are configured correctly.
+
+If the bot receives HTTP 423, the check-in window is closed. The program handles this response without terminating the entire collection process.
+
+If a check-in has already been answered by the bot, the program skips it to prevent duplicate replies.
  
 ## Authors
+Rachel White
  
 ## Version History
  
@@ -54,8 +58,4 @@ command to run if program contains helper info
 ## Acknowledgments
  
 Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+
