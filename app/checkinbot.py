@@ -7,8 +7,10 @@ import sys
 import json
 import mimetypes
 import requests
+from dotenv import load_dotenv
 
 #load environment variables
+load_dotenv()
 API_BASE_URL = os.getenv("PRACTICE_HUB_URL", "").rstrip("/")
 API_TOKEN = os.getenv("PRACTICE_API_TOKEN")
 INSTRUCTOR_ID = os.getenv("INSTRUCTOR_ID")
@@ -32,7 +34,7 @@ os.makedirs(FILES_DIR, exist_ok=True)
 
 #get my user profile to identify my comments
 def get_my_profile():
-    url = f"{API_BASE_URL}/api/v1/users/me"
+    url = f"{API_BASE_URL}/api/v1/me"
     try:
         response = session.get(url)
         response.raise_for_status()
@@ -45,7 +47,9 @@ def get_my_profile():
 def download_attachment(file_info):
     file_id = file_info.get("id")
     filename = file_info.get("filename", f"file_{file_id}")
-    download_url =f"{API_BASE_URL}/api/v1/attachments/{file_id}/download"
+    download_url = file_info.get("download_url") or f"{API_BASE_URL}/api/v1/attachments/{file_id}"
+    if not download_url.startswith("http"):
+        download_url = f"{API_BASE_URL}{download_url}"
 
     local_path = os.path.join(FILES_DIR, filename)
     print(f"Downloading attachment: {filename} ...")
@@ -64,17 +68,17 @@ def download_attachment(file_info):
 def collect_instructor_posts():
     posts_url = f"{API_BASE_URL}/api/v1/posts"
     instructor_posts = []
-    page = 1
+    limit = 50
+    offset = 0
 
     print(f"Starting collection for Instructor ID: {INSTRUCTOR_ID}")
 
     while True:
         try:
-            response = session.get(posts_url, params={"page": page})
+            response = session.get(posts_url, params={"limit": limit, "offset": offset})
             response.raise_for_status()
-            data = response.json()
+            posts = response.json()
 
-            posts = data.get("posts", [])
             if not posts:
                 break
 
@@ -88,14 +92,13 @@ def collect_instructor_posts():
                     for attachment in attachments:
                         download_attachment(attachment)
 
-            #check pagination metadata to see if another page exists
-            meta = data.get("meta", {})
-            if page >= meta.get("total_pages", page):
+            #stop once a short page shows there's nothing left
+            if len(posts) < limit:
                 break
-            page += 1
+            offset += limit
 
         except requests.RequestException as e:
-            print(f"Error retrieving posts page {page}: {e}", file=sys.stderr)
+            print(f"Error retrieving posts at offset {offset}: {e}", file=sys.stderr)
             break
 
     return instructor_posts
@@ -117,7 +120,7 @@ def process_check_ins(posts, bot_user_id):
             try:
                 comments_resp = session.get(comments_url)
                 comments_resp.raise_for_status()
-                comments = comments_resp.json().get("comments", [])
+                comments = comments_resp.json()
             except requests.RequestException as e:
                 print(f"Could not retrieve comments for post{post_id}: {e}", file=sys.stderr)
                 continue
