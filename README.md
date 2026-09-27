@@ -13,7 +13,7 @@ Practice Hub Check-in Bot
 ## AI Usage
 Hand-written components: project setup, core program structure, API configuration, environment variable usage, post filtering logic, check-in identification, and GitHub Actions workflow configuration.
 
-AI-assisted components: exception handling for HTTP 423 responses, testing ideas, syntax checking, debugging, and reviewing code for spacing or formatting errors.
+AI-assisted components: exception handling for HTTP 423 responses and reviewing code for spacing or formatting errors. I reviewed all AI code and did not choose to rewrite anything.
 
 ## Getting Started
  
